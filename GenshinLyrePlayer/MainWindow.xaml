@@ -5,8 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GenshinLyrePlayer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-
-    </Grid>
+        Title="Genshin Lyre Player" Height="450" Width="800" Closing="WindowClosing" Loaded="WindowLoaded">
+    <TabControl>
+        <TabItem Header="Dashboard">
+            <Grid>
+                <ListBox x:Name="MidiFilesList" Margin="30,110,0,0" HorizontalAlignment="Left" Width="163" Height="250" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+                <TextBlock HorizontalAlignment="Left" Margin="45,30,0,0" Text="Select a MIDI file" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18" Grid.ColumnSpan="2"/>
+            </Grid>
+        </TabItem>
+        <TabItem Header="Settings">
+            <Grid/>
+        </TabItem>
+    </TabControl>
 </Window>
