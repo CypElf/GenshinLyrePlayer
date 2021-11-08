@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Melanchall.DryWetMidi.Core;
+using Melanchall.DryWetMidi.Common;
 using Melanchall.DryWetMidi.Interaction;
 using WindowsInput.Native;
 using WindowsInput;
@@ -94,8 +95,6 @@ namespace GenshinLyrePlayer
         {
             Debug.WriteLine("PRESSED " + e.KeyPressed.ToString());
 
-            var root_note = 47; // TODO : auto detect
-
             if (e.KeyPressed == Key.F6 && MidiFilesList.Items.Count > 0)
             {
                 MidiFile midiFile;
@@ -111,13 +110,17 @@ namespace GenshinLyrePlayer
 
                 var tempo = midiFile.GetTempoMap();
                 IEnumerable<Note> notes = midiFile.GetNotes();
+                
+                var (rootNode, hits) = GetBestRootNode(notes, notesConverter);
+
+                Debug.WriteLine("Best root found is " + rootNode + " with " + hits + " hits in " + notes.Count() + " notes (" + ((double)hits / notes.Count() * 100).ToString("F") + "%)");
 
                 foreach (var note in notes)
                 {
                     VirtualKeyCode? key = null;
-                    if (notesConverter.ContainsKey(note.NoteNumber - root_note))
+                    if (notesConverter.ContainsKey(note.NoteNumber - rootNode))
                     {
-                        key = notesConverter[note.NoteNumber - root_note];
+                        key = notesConverter[note.NoteNumber - rootNode];
                     }
                     Debug.WriteLine("Note: " + note.NoteNumber);
                     Debug.WriteLine(key.ToString());
@@ -134,6 +137,37 @@ namespace GenshinLyrePlayer
                     }
                 }
             }
+        }
+
+        private static (int, int) GetBestRootNode(IEnumerable<Note> notes, Dictionary<int, VirtualKeyCode> notesConverter)
+        {
+            var sortedNotesNumbers = notes.Select(note => note.NoteNumber).OrderBy(note => note);
+            var bestRoot = sortedNotesNumbers.First();
+            var notesCount = sortedNotesNumbers.GroupBy(note => note).ToDictionary(group => group.Key, group => group.Count());
+            var bestHits = 0;
+
+            Debug.WriteLine(notesCount.Select(note => note.Value).Sum());
+            Debug.WriteLine(sortedNotesNumbers.Count());
+
+            foreach (var root in Enumerable.Range(sortedNotesNumbers.First(), sortedNotesNumbers.Last() - 35))
+            {
+                var higher = root + 35;
+                var hits = 0;
+                foreach (var noteNumber in notesCount.Keys)
+                {
+                    if (root <= noteNumber && noteNumber <= higher)
+                    {
+                        hits += notesCount[noteNumber];
+                    }
+                }
+                if (hits > bestHits)
+                {
+                    bestHits = hits;
+                    bestRoot = (SevenBitNumber)root;
+                }
+            }
+
+            return (bestRoot, bestHits);
         }
     }
 }
