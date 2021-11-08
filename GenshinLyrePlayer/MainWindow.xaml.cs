@@ -10,14 +10,43 @@ using Melanchall.DryWetMidi.Interaction;
 using WindowsInput.Native;
 using WindowsInput;
 using System.Threading;
+using System;
 
 namespace GenshinLyrePlayer
 {
     public partial class MainWindow : Window
     {
-        private static Dictionary<int, Key> notesConverter = new Dictionary<int, Key>
+        // the int used as a key is the offset from the root note in semitones
+        private static Dictionary<int, VirtualKeyCode> notesConverter = new Dictionary<int, VirtualKeyCode>
         {
-            { 0, Key.A }
+            // AZERTY layout
+
+            // F-clef
+            { 0, VirtualKeyCode.VK_W },
+            { 2, VirtualKeyCode.VK_X },
+            { 4, VirtualKeyCode.VK_X },
+            { 5, VirtualKeyCode.VK_V },
+            { 7, VirtualKeyCode.VK_B },
+            { 9, VirtualKeyCode.VK_N },
+            { 11, VirtualKeyCode.OEM_COMMA },
+
+            // C-clef
+            { 12, VirtualKeyCode.VK_Q },
+            { 14, VirtualKeyCode.VK_S },
+            { 16, VirtualKeyCode.VK_D },
+            { 17, VirtualKeyCode.VK_F },
+            { 19, VirtualKeyCode.VK_G },
+            { 21, VirtualKeyCode.VK_H },
+            { 23, VirtualKeyCode.VK_J },
+
+            // G-clef
+            { 24, VirtualKeyCode.VK_A },
+            { 26, VirtualKeyCode.VK_Z },
+            { 28, VirtualKeyCode.VK_E },
+            { 29, VirtualKeyCode.VK_R },
+            { 31, VirtualKeyCode.VK_T },
+            { 33, VirtualKeyCode.VK_Y },
+            { 35, VirtualKeyCode.VK_U },
         };
         private LowLevelKeyboardListener listener;
         private List<FileStream> midiFiles;
@@ -65,34 +94,45 @@ namespace GenshinLyrePlayer
         {
             Debug.WriteLine("PRESSED " + e.KeyPressed.ToString());
 
-            if (e.KeyPressed == Key.F6)
+            var root_note = 47; // TODO : auto detect
+
+            if (e.KeyPressed == Key.F6 && MidiFilesList.Items.Count > 0)
             {
-                simulator.Keyboard.KeyDown(VirtualKeyCode.VK_A);
-                simulator.Keyboard.KeyUp(VirtualKeyCode.VK_A);
-                Thread.Sleep(1000);
-                simulator.Keyboard.KeyDown(VirtualKeyCode.VK_A);
-                simulator.Keyboard.KeyUp(VirtualKeyCode.VK_A);
-                Thread.Sleep(1000);
-                simulator.Keyboard.KeyDown(VirtualKeyCode.VK_A);
-                simulator.Keyboard.KeyUp(VirtualKeyCode.VK_A);
-                Thread.Sleep(1000);
-                simulator.Keyboard.KeyDown(VirtualKeyCode.VK_A);
-                simulator.Keyboard.KeyUp(VirtualKeyCode.VK_A);
-                Thread.Sleep(1000);
-                simulator.Keyboard.KeyDown(VirtualKeyCode.VK_A);
-                simulator.Keyboard.KeyUp(VirtualKeyCode.VK_A);
-                Thread.Sleep(1000);
+                MidiFile midiFile;
+                try
+                {
+                    midiFile = MidiFile.Read(midiFiles[MidiFilesList.SelectedIndex]);
+                }
+                catch
+                {
+                    MessageBox.Show("Unable to parse this file as a MIDI file");
+                    return;
+                }
 
-
-
-                /* var midiFile = MidiFile.Read(midiFiles[0]);
-
+                var tempo = midiFile.GetTempoMap();
                 IEnumerable<Note> notes = midiFile.GetNotes();
 
                 foreach (var note in notes)
                 {
-                    Debug.WriteLine(note.NoteNumber);
-                } */
+                    VirtualKeyCode? key = null;
+                    if (notesConverter.ContainsKey(note.NoteNumber - root_note))
+                    {
+                        key = notesConverter[note.NoteNumber - root_note];
+                    }
+                    Debug.WriteLine("Note: " + note.NoteNumber);
+                    Debug.WriteLine(key.ToString());
+
+                    if (key != null)
+                    {
+                        simulator.Keyboard.KeyDown((VirtualKeyCode)key);
+
+                        var length = TimeConverter.ConvertTo<MetricTimeSpan>(note.Length, tempo);
+                        Debug.WriteLine("I'll wait for " + length.Milliseconds + " ms");
+                        Thread.Sleep(length.Milliseconds);
+
+                        simulator.Keyboard.KeyUp((VirtualKeyCode)key);
+                    }
+                }
             }
         }
     }
