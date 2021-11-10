@@ -6,22 +6,16 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Melanchall.DryWetMidi.Core;
-using Melanchall.DryWetMidi.Common;
-using Melanchall.DryWetMidi.Interaction;
-using WindowsInput.Native;
-using WindowsInput;
-using System.Threading;
-using System;
 using Melanchall.DryWetMidi.Multimedia;
+using System.Threading.Tasks;
 
 namespace GenshinLyrePlayer
 {
     public partial class MainWindow : Window
     {
         // the int used as a key is the offset from the root note in semitones
-        private LowLevelKeyboardListener listener;
-        private List<FileStream> midiFiles;
-        private InputSimulator simulator;
+        private LowLevelKeyboardListener listener = new LowLevelKeyboardListener();
+        private List<FileStream> midiFiles = new List<FileStream>();
 
         public MainWindow()
         {
@@ -57,65 +51,35 @@ namespace GenshinLyrePlayer
             listener = new LowLevelKeyboardListener();
             listener.OnKeyPressed += onKeyPressed;
             listener.HookKeyboard();
-
-            simulator = new InputSimulator();
         }
 
         private void onKeyPressed(object sender, KeyPressedArgs e)
         {
             Debug.WriteLine("PRESSED " + e.KeyPressed.ToString());
 
-            if (e.KeyPressed == Key.F7 || e.KeyPressed == Key.F6)
+            if (e.KeyPressed == Key.F6 && MidiFilesList.Items.Count > 0)
             {
-                MidiFile midiFile;
-                try
                 {
-                    midiFile = MidiFile.Read(midiFiles[MidiFilesList.SelectedIndex]);
-                }
-                catch
-                {
-                    MessageBox.Show("Unable to parse this file as a MIDI file");
-                    return;
-                }
-
-                if (e.KeyPressed == Key.F7 && MidiFilesList.Items.Count > 0)
-                {
-                    var output = new MIDIToKeyboardConverter();
-                    output.ConfigureFor(midiFile);
-                    midiFile.Play(output);
-                    Debug.WriteLine("finished playing that");
-                }
-
-                if (e.KeyPressed == Key.F6 && MidiFilesList.Items.Count > 0)
-                {
-                    /* var tempo = midiFile.GetTempoMap();
-                    IEnumerable<Note> notes = midiFile.GetNotes();
-
-                    var (rootNode, hits) = GetBestRootNode(notes, notesConverter);
-
-                    Debug.WriteLine("Best root found is " + rootNode + " with " + hits + " hits in " + notes.Count() + " notes (" + ((double)hits / notes.Count() * 100).ToString("F") + "%)");
-
-                    foreach (var note in notes)
+                    MidiFile midiFile;
+                    try
                     {
-                        VirtualKeyCode? key = null;
-                        if (notesConverter.ContainsKey(note.NoteNumber - rootNode))
-                        {
-                            key = notesConverter[note.NoteNumber - rootNode];
-                        }
-                        Debug.WriteLine("Note: " + note.NoteNumber);
-                        Debug.WriteLine(key.ToString());
+                        midiFile = MidiFile.Read(midiFiles[MidiFilesList.SelectedIndex]);
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Unable to parse this file as a MIDI file");
+                        return;
+                    }
 
-                        if (key != null)
-                        {
-                            simulator.Keyboard.KeyDown((VirtualKeyCode)key);
-
-                            var length = TimeConverter.ConvertTo<MetricTimeSpan>(note.Length, tempo);
-                            Debug.WriteLine("I'll wait for " + length.Milliseconds + " ms");
-                            Thread.Sleep(length.Milliseconds);
-
-                            simulator.Keyboard.KeyUp((VirtualKeyCode)key);
-                        }
-                    } */
+                    Task.Run(() =>
+                    {
+                        var output = new MIDIToKeyboardConverter();
+                        output.ConfigureFor(midiFile);
+                        listener.UnHookKeyboard(); // mandatory or the hook will slow down the first few notes played for some reason... fuck it
+                        midiFile.Play(output);
+                        listener.HookKeyboard();
+                        Debug.WriteLine("finished playing that");
+                    });
                 }
             }
         }
