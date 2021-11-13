@@ -8,6 +8,7 @@ using System.Windows.Input;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Multimedia;
 using System.Threading.Tasks;
+using System;
 
 namespace GenshinLyrePlayer
 {
@@ -48,6 +49,14 @@ namespace GenshinLyrePlayer
                 MidiFilesList.Items.Add(listItem);
             }
 
+            foreach (KeyboardLayout value in Enum.GetValues(typeof(KeyboardLayout))) {
+                var item = new ComboBoxItem();
+                item.Tag = value;
+                item.Content = value.ToString();
+                if (value == KeyboardLayout.QWERTY) item.IsSelected = true;
+                layoutComboBox.Items.Add(item);
+            }
+
             listener = new LowLevelKeyboardListener();
             listener.OnKeyPressed += onKeyPressed;
             listener.HookKeyboard();
@@ -71,13 +80,12 @@ namespace GenshinLyrePlayer
                         return;
                     }
 
+                    var layout = (KeyboardLayout)((ComboBoxItem)layoutComboBox.SelectedItem).Tag;
+
                     Task.Run(() =>
                     {
-                        var output = new MIDIToKeyboardConverter();
-                        output.ConfigureFor(midiFile);
-                        listener.UnHookKeyboard(); // mandatory or the hook will slow down the first few notes played for some reason... fuck it
-                        midiFile.Play(output);
-                        listener.HookKeyboard();
+                        var player = new MIDIToKeyboardConverter(midiFile, listener, layout);
+                        midiFile.Play(player);
                         Debug.WriteLine("finished playing that");
                     });
                 }

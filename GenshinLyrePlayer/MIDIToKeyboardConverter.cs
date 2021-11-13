@@ -15,8 +15,12 @@ namespace GenshinLyrePlayer
     {
         public event EventHandler<MidiEventSentEventArgs> EventSent;
 
+        private bool firstNote = true;
+        private SevenBitNumber rootNoteNumber = (SevenBitNumber)0;
+        private LowLevelKeyboardListener hook;
+        private KeyboardLayout layout;
         private static IKeyboardSimulator keyboard = new InputSimulator().Keyboard;
-        private static readonly Dictionary<int, VirtualKeyCode> notesConverter = new Dictionary<int, VirtualKeyCode>
+        private static readonly Dictionary<int, VirtualKeyCode> notesConverterAZERTY = new Dictionary<int, VirtualKeyCode>
         {
             // AZERTY layout
 
@@ -47,8 +51,7 @@ namespace GenshinLyrePlayer
             { 33, VirtualKeyCode.VK_Y },
             { 35, VirtualKeyCode.VK_U },
         };
-        private SevenBitNumber rootNoteNumber = (SevenBitNumber)0;
-        private static Dictionary<int, VirtualKeyCode> notesConverterQWERTY = new Dictionary<int, VirtualKeyCode>
+        private static readonly Dictionary<int, VirtualKeyCode> notesConverterQWERTY = new Dictionary<int, VirtualKeyCode>
         {
             // QWERTY layout
 
@@ -80,33 +83,43 @@ namespace GenshinLyrePlayer
             { 35, VirtualKeyCode.VK_U },
         };
 
+        public MIDIToKeyboardConverter(MidiFile midiFile, LowLevelKeyboardListener hook, KeyboardLayout layout)
+        {
+            this.hook = hook;
+            this.layout = layout;
+            if (layout == KeyboardLayout.QWERTY)
+                rootNoteNumber = GetBestRootNode(midiFile.GetNotes(), notesConverterQWERTY).Item1;
+            else
+                rootNoteNumber = GetBestRootNode(midiFile.GetNotes(), notesConverterAZERTY).Item1;
+        }
+
         public void PrepareForEventsSending()
         {
             Debug.WriteLine("preparing...");
+            rootNoteNumber = (SevenBitNumber)49;
+            hook.UnHookKeyboard(); // disable the keyboard hook because if it's enabled while the music begins to play, the first notes are buggy (the first few are played slowly out of sync, and then a ton are played at the same time before the music starts to play correctly after a few seconds)
         }
 
         public void SendEvent(MidiEvent midiEvent)
         {
             if (midiEvent is NoteOnEvent)
             {
+                if (firstNote)
+                {
+                    hook.HookKeyboard(); // re enable the keyboard hook after the song has begun to play
+                    firstNote = false;
+                }
                 var note = (NoteOnEvent)midiEvent;
 
-                VirtualKeyCode? key = null;
-                if (notesConverter.ContainsKey(note.NoteNumber - rootNoteNumber))
+                var converter = layout == KeyboardLayout.AZERTY ? notesConverterAZERTY : notesConverterQWERTY;
+
+                if (converter.ContainsKey(note.NoteNumber - rootNoteNumber))
                 {
-                    key = notesConverter[note.NoteNumber - rootNoteNumber];
+                    VirtualKeyCode key = converter[note.NoteNumber - rootNoteNumber];
+                    keyboard.KeyPress(key);
                 }
 
-                if (key != null)
-                {
-                    keyboard.KeyPress((VirtualKeyCode)key);
-                }
             }
-        }
-
-        public void ConfigureFor(MidiFile midiFile)
-        {
-            rootNoteNumber = GetBestRootNode(midiFile.GetNotes(), notesConverter).Item1;
         }
 
         private static (SevenBitNumber, int) GetBestRootNode(IEnumerable<Note> notes, Dictionary<int, VirtualKeyCode> notesConverter)

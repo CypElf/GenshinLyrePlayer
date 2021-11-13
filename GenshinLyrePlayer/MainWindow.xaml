@@ -3,34 +3,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:GenshinLyrePlayer"
         mc:Ignorable="d"
         Title="Genshin Lyre Player" Height="450" Width="800" Closing="WindowClosing" Loaded="WindowLoaded">
-  <TabControl>
-    <TabItem Header="Dashboard">
-      <Grid>
-        <ListBox x:Name="MidiFilesList" Margin="30,110,0,0" HorizontalAlignment="Left" Width="163" Height="250" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
-        <TextBlock HorizontalAlignment="Left" Margin="45,30,0,0" Text="Select a MIDI file" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18" Grid.ColumnSpan="2"/>
-      </Grid>
-    </TabItem>
-    <TabItem Header="Settings">
-      <Grid>
-        <ComboBox HorizontalAlignment="Left" Margin="160,30,0,0" Width="120" Height="22" VerticalAlignment="Top">
-          <ComboBoxItem Content="QWERTY" IsSelected="True"/>
-          <ComboBoxItem Content="AZERTY"/>
-        </ComboBox>
-        <TextBlock HorizontalAlignment="Left" Margin="30,30,0,0" Text="Keyboard layout" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16"/>
-        <Separator Margin="20,120,20,0" VerticalAlignment="Top" Height="16"/>
-        <TextBlock HorizontalAlignment="Left" Margin="55,160,0,0" Text="Advanced" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
-        <CheckBox x:Name="holdNotes" FlowDirection="RightToLeft" Content="Hold the notes" HorizontalAlignment="Left" Margin="30,76,0,0" VerticalAlignment="Top" FontSize="16" Padding="10,-4,0,0">
-          <CheckBox.Resources>
-               <Style TargetType="{x:Type Path}">
-                     <Setter Property="FlowDirection" Value="LeftToRight"/>
-               </Style>
-          </CheckBox.Resources>
-      
-        </CheckBox>
-      </Grid>
-    </TabItem>
-  </TabControl>
+    <TabControl>
+        <TabItem Header="Dashboard">
+            <Grid>
+                <ListBox x:Name="MidiFilesList" Margin="30,110,0,0" HorizontalAlignment="Left" Width="163" Height="250" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+                <TextBlock HorizontalAlignment="Left" Margin="45,30,0,0" Text="Select a MIDI file" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18" Grid.ColumnSpan="2"/>
+            </Grid>
+        </TabItem>
+        <TabItem Header="Settings">
+            <Grid>
+                <ComboBox x:Name="layoutComboBox" HorizontalAlignment="Left" Margin="160,30,0,0" Width="120" Height="22" VerticalAlignment="Top">
+                </ComboBox>
+                <TextBlock HorizontalAlignment="Left" Margin="30,30,0,0" Text="Keyboard layout" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16"/>
+                <Separator Margin="20,120,20,0" VerticalAlignment="Top" Height="16"/>
+                <TextBlock HorizontalAlignment="Left" Margin="55,160,0,0" Text="Advanced" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+            </Grid>
+        </TabItem>
+    </TabControl>
 </Window>
