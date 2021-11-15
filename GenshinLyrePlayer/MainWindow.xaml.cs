@@ -7,7 +7,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Multimedia;
-using System.Threading.Tasks;
 using System;
 
 namespace GenshinLyrePlayer
@@ -17,6 +16,7 @@ namespace GenshinLyrePlayer
         // the int used as a key is the offset from the root note in semitones
         private LowLevelKeyboardListener listener = new LowLevelKeyboardListener();
         private List<FileStream> midiFiles = new List<FileStream>();
+        private Playback playback;
 
         public MainWindow()
         {
@@ -66,7 +66,12 @@ namespace GenshinLyrePlayer
         {
             Debug.WriteLine("PRESSED " + e.KeyPressed.ToString());
 
-            if (e.KeyPressed == Key.F6 && MidiFilesList.Items.Count > 0)
+            if (e.KeyPressed == Key.F7 && playback != null && playback.IsRunning)
+            {
+                playback.Stop();
+            }
+
+            if (e.KeyPressed == Key.F6 && MidiFilesList.Items.Count > 0 && (playback == null || !playback.IsRunning))
             {
                 {
                     MidiFile midiFile;
@@ -82,12 +87,10 @@ namespace GenshinLyrePlayer
 
                     var layout = (KeyboardLayout)((ComboBoxItem)layoutComboBox.SelectedItem).Tag;
 
-                    Task.Run(() =>
-                    {
-                        var player = new MIDIToKeyboardConverter(midiFile, listener, layout);
-                        midiFile.Play(player);
-                        Debug.WriteLine("finished playing that");
-                    });
+                    var player = new MIDIToKeyboardConverter(midiFile, layout);
+
+                    playback = midiFile.GetPlayback(player);
+                    playback.Start();
                 }
             }
         }

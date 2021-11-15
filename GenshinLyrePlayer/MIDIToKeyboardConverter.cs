@@ -15,103 +15,114 @@ namespace GenshinLyrePlayer
     {
         public event EventHandler<MidiEventSentEventArgs> EventSent;
 
-        private bool firstNote = true;
-        private SevenBitNumber rootNoteNumber = (SevenBitNumber)0;
-        private LowLevelKeyboardListener hook;
-        private KeyboardLayout layout;
-        private static IKeyboardSimulator keyboard = new InputSimulator().Keyboard;
-        private static readonly Dictionary<int, VirtualKeyCode> notesConverterAZERTY = new Dictionary<int, VirtualKeyCode>
+        private SevenBitNumber rootNoteNumber;
+        private static readonly IKeyboardSimulator keyboard = new InputSimulator().Keyboard;
+        private readonly Dictionary<int, VirtualKeyCode> converter;
+        private static readonly List<int> semiTones = new()
         {
-            // AZERTY layout
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11,
 
-            // F-clef
-            { 0, VirtualKeyCode.VK_W },
-            { 2, VirtualKeyCode.VK_X },
-            { 4, VirtualKeyCode.VK_C },
-            { 5, VirtualKeyCode.VK_V },
-            { 7, VirtualKeyCode.VK_B },
-            { 9, VirtualKeyCode.VK_N },
-            { 11, VirtualKeyCode.OEM_COMMA },
+            12,
+            14,
+            16,
+            17,
+            19,
+            21,
+            23,
 
-            // C-clef
-            { 12, VirtualKeyCode.VK_Q },
-            { 14, VirtualKeyCode.VK_S },
-            { 16, VirtualKeyCode.VK_D },
-            { 17, VirtualKeyCode.VK_F },
-            { 19, VirtualKeyCode.VK_G },
-            { 21, VirtualKeyCode.VK_H },
-            { 23, VirtualKeyCode.VK_J },
-
-            // G-clef
-            { 24, VirtualKeyCode.VK_A },
-            { 26, VirtualKeyCode.VK_Z },
-            { 28, VirtualKeyCode.VK_E },
-            { 29, VirtualKeyCode.VK_R },
-            { 31, VirtualKeyCode.VK_T },
-            { 33, VirtualKeyCode.VK_Y },
-            { 35, VirtualKeyCode.VK_U },
-        };
-        private static readonly Dictionary<int, VirtualKeyCode> notesConverterQWERTY = new Dictionary<int, VirtualKeyCode>
-        {
-            // QWERTY layout
-
-            // F-clef
-            { 0, VirtualKeyCode.VK_Z },
-            { 2, VirtualKeyCode.VK_X },
-            { 4, VirtualKeyCode.VK_C },
-            { 5, VirtualKeyCode.VK_V },
-            { 7, VirtualKeyCode.VK_B },
-            { 9, VirtualKeyCode.VK_N },
-            { 11, VirtualKeyCode.VK_M },
-
-            // C-clef
-            { 12, VirtualKeyCode.VK_A },
-            { 14, VirtualKeyCode.VK_S },
-            { 16, VirtualKeyCode.VK_D },
-            { 17, VirtualKeyCode.VK_F },
-            { 19, VirtualKeyCode.VK_G },
-            { 21, VirtualKeyCode.VK_H },
-            { 23, VirtualKeyCode.VK_J },
-
-            // G-clef
-            { 24, VirtualKeyCode.VK_Q },
-            { 26, VirtualKeyCode.VK_W },
-            { 28, VirtualKeyCode.VK_E },
-            { 29, VirtualKeyCode.VK_R },
-            { 31, VirtualKeyCode.VK_T },
-            { 33, VirtualKeyCode.VK_Y },
-            { 35, VirtualKeyCode.VK_U },
+            24,
+            26,
+            28,
+            29,
+            31,
+            33,
+            35
         };
 
-        public MIDIToKeyboardConverter(MidiFile midiFile, LowLevelKeyboardListener hook, KeyboardLayout layout)
+        private static readonly List<VirtualKeyCode> azertyLyreKeys = new()
         {
-            this.hook = hook;
-            this.layout = layout;
-            if (layout == KeyboardLayout.QWERTY)
-                rootNoteNumber = GetBestRootNode(midiFile.GetNotes(), notesConverterQWERTY).Item1;
-            else
-                rootNoteNumber = GetBestRootNode(midiFile.GetNotes(), notesConverterAZERTY).Item1;
+            // F-clef
+            VirtualKeyCode.VK_W,
+            VirtualKeyCode.VK_X,
+            VirtualKeyCode.VK_C,
+            VirtualKeyCode.VK_V,
+            VirtualKeyCode.VK_B,
+            VirtualKeyCode.VK_N,
+            VirtualKeyCode.OEM_COMMA,
+
+            // C-clef
+            VirtualKeyCode.VK_Q,
+            VirtualKeyCode.VK_S,
+            VirtualKeyCode.VK_D,
+            VirtualKeyCode.VK_F,
+            VirtualKeyCode.VK_G,
+            VirtualKeyCode.VK_H,
+            VirtualKeyCode.VK_J,
+
+            // G-clef
+            VirtualKeyCode.VK_A,
+            VirtualKeyCode.VK_Z,
+            VirtualKeyCode.VK_E,
+            VirtualKeyCode.VK_R,
+            VirtualKeyCode.VK_T,
+            VirtualKeyCode.VK_Y,
+            VirtualKeyCode.VK_U
+        };
+
+        private static readonly List<VirtualKeyCode> qwertyLyreKeys = new()
+        {
+            // F-clef
+            VirtualKeyCode.VK_Z,
+            VirtualKeyCode.VK_X,
+            VirtualKeyCode.VK_C,
+            VirtualKeyCode.VK_V,
+            VirtualKeyCode.VK_B,
+            VirtualKeyCode.VK_N,
+            VirtualKeyCode.VK_M,
+            
+            // C-clef
+            VirtualKeyCode.VK_A,
+            VirtualKeyCode.VK_S,
+            VirtualKeyCode.VK_D,
+            VirtualKeyCode.VK_F,
+            VirtualKeyCode.VK_G,
+            VirtualKeyCode.VK_H,
+            VirtualKeyCode.VK_J,
+            
+            // G-clef
+            VirtualKeyCode.VK_Q,
+            VirtualKeyCode.VK_W,
+            VirtualKeyCode.VK_E,
+            VirtualKeyCode.VK_R,
+            VirtualKeyCode.VK_T,
+            VirtualKeyCode.VK_Y,
+            VirtualKeyCode.VK_U,
+        };
+
+        public MIDIToKeyboardConverter(MidiFile midiFile, KeyboardLayout layout)
+        {
+            converter = semiTones.Zip(layout == KeyboardLayout.QWERTY ? qwertyLyreKeys : azertyLyreKeys, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
+
+            rootNoteNumber = GetBestRootNode(midiFile.GetNotes()).Item1;
         }
 
         public void PrepareForEventsSending()
         {
             Debug.WriteLine("preparing...");
-            rootNoteNumber = (SevenBitNumber)49;
-            hook.UnHookKeyboard(); // disable the keyboard hook because if it's enabled while the music begins to play, the first notes are buggy (the first few are played slowly out of sync, and then a ton are played at the same time before the music starts to play correctly after a few seconds)
+            rootNoteNumber = (SevenBitNumber)47;
         }
 
         public void SendEvent(MidiEvent midiEvent)
         {
             if (midiEvent is NoteOnEvent)
             {
-                if (firstNote)
-                {
-                    hook.HookKeyboard(); // re enable the keyboard hook after the song has begun to play
-                    firstNote = false;
-                }
                 var note = (NoteOnEvent)midiEvent;
-
-                var converter = layout == KeyboardLayout.AZERTY ? notesConverterAZERTY : notesConverterQWERTY;
 
                 if (converter.ContainsKey(note.NoteNumber - rootNoteNumber))
                 {
@@ -122,7 +133,7 @@ namespace GenshinLyrePlayer
             }
         }
 
-        private static (SevenBitNumber, int) GetBestRootNode(IEnumerable<Note> notes, Dictionary<int, VirtualKeyCode> notesConverter)
+        private static (SevenBitNumber, int) GetBestRootNode(IEnumerable<Note> notes)
         {
             var sortedNotesNumbers = notes.Select(note => note.NoteNumber).OrderBy(note => note);
             var bestRoot = sortedNotesNumbers.First();
