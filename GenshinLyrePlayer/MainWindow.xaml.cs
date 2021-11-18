@@ -8,6 +8,7 @@ using System.Windows.Input;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Multimedia;
 using System;
+using System.Text.RegularExpressions;
 
 namespace GenshinLyrePlayer
 {
@@ -17,6 +18,7 @@ namespace GenshinLyrePlayer
         private LowLevelKeyboardListener listener = new LowLevelKeyboardListener();
         private List<FileStream> midiFiles = new List<FileStream>();
         private Playback playback;
+        private bool useAutoRoot;
 
         public MainWindow()
         {
@@ -57,6 +59,8 @@ namespace GenshinLyrePlayer
                 layoutComboBox.Items.Add(item);
             }
 
+            useAutoRoot = autoRootCheckbox.IsChecked ?? false;
+
             listener = new LowLevelKeyboardListener();
             listener.OnKeyPressed += onKeyPressed;
             listener.HookKeyboard();
@@ -87,11 +91,43 @@ namespace GenshinLyrePlayer
 
                     var layout = (KeyboardLayout)((ComboBoxItem)layoutComboBox.SelectedItem).Tag;
 
-                    var player = new MIDIToKeyboardConverter(midiFile, layout);
+                    var player = new MIDIToKeyboardConverter(midiFile, layout, useAutoRoot ? -1 : int.Parse(customRootInput.Text));
 
                     playback = midiFile.GetPlayback(player);
                     playback.Start();
                 }
+            }
+        }
+
+        private void onAutoRootChecked(object sender, RoutedEventArgs e)
+        {
+            useAutoRoot = true;
+            if (customRootInput != null)
+            {
+                customRootInput.IsEnabled = false;
+                customRootInput.Text = "";
+            }
+        }
+
+        private void onAutoRootUnchecked(object sender, RoutedEventArgs e)
+        {
+            useAutoRoot = false;
+            customRootInput.IsEnabled = true;
+        }
+
+        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
+        {
+            var regex = new Regex("[0-9]+");
+            var isMatch = regex.IsMatch(e.Text);
+            if (isMatch)
+            {
+                var number = int.Parse(((TextBox)sender).Text + e.Text);
+                var isOk = number >= 0 && number < 128;
+                e.Handled = !isOk;
+            }
+            else
+            {
+                e.Handled = true;
             }
         }
     }

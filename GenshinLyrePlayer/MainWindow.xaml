@@ -19,6 +19,9 @@
                 <TextBlock HorizontalAlignment="Left" Margin="30,30,0,0" Text="Keyboard layout" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16"/>
                 <Separator Margin="20,120,20,0" VerticalAlignment="Top" Height="16"/>
                 <TextBlock HorizontalAlignment="Left" Margin="55,160,0,0" Text="Advanced" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+                <CheckBox x:Name="autoRootCheckbox"  Content="detect the best root note to use" HorizontalAlignment="Left" Margin="55,214,0,0" VerticalAlignment="Top" IsChecked="True" Checked="onAutoRootChecked" Unchecked="onAutoRootUnchecked"/>
+                <TextBlock HorizontalAlignment="Left" Margin="67,261,0,0" Text="Custom root note to use :" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                <TextBox x:Name="customRootInput" PreviewTextInput="NumberValidationTextBox" HorizontalAlignment="Left" Margin="229,260,0,0" Text="" VerticalAlignment="Top" Width="110" IsEnabled="False" Height="26"/>
             </Grid>
         </TabItem>
     </TabControl>

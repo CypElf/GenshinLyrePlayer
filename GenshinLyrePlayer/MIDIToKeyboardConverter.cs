@@ -15,11 +15,20 @@ namespace GenshinLyrePlayer
     {
         public event EventHandler<MidiEventSentEventArgs> EventSent;
 
-        private SevenBitNumber rootNoteNumber;
+        private readonly SevenBitNumber rootNoteNumber;
         private static readonly IKeyboardSimulator keyboard = new InputSimulator().Keyboard;
         private readonly Dictionary<int, VirtualKeyCode> converter;
+
+        // MIDI notes are coded with 7 bits, so they range from 0 to 127
+        // As there are 12 semitones in one octave, there are a total of 11 octaves (with the latest one missing the 4 upper values)
+        // Because we can only play in a range of 3 octaves in Genshin Impact, we have to choose the interval of 3 octaves we want to keep among the 11
+        // The choice made here is to select the interval of notes between the fifth and eighth octaves as it covers the middle notes, and in general most of the notes will be in this interval
+        private static readonly int fifthOctaveStart = 48;
+        private static readonly int eighthOctaveStart = 84;
+
         private static readonly List<int> semiTones = new()
         {
+            // first octave
             0,
             2,
             4,
@@ -28,6 +37,7 @@ namespace GenshinLyrePlayer
             9,
             11,
 
+            // second octave
             12,
             14,
             16,
@@ -36,6 +46,7 @@ namespace GenshinLyrePlayer
             21,
             23,
 
+            // third octave
             24,
             26,
             28,
@@ -105,61 +116,65 @@ namespace GenshinLyrePlayer
             VirtualKeyCode.VK_U,
         };
 
-        public MIDIToKeyboardConverter(MidiFile midiFile, KeyboardLayout layout)
+        public MIDIToKeyboardConverter(MidiFile midiFile, KeyboardLayout layout, int rootNote = -1)
         {
             converter = semiTones.Zip(layout == KeyboardLayout.QWERTY ? qwertyLyreKeys : azertyLyreKeys, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
 
-            rootNoteNumber = GetBestRootNode(midiFile.GetNotes()).Item1;
+            rootNoteNumber = (SevenBitNumber)(rootNote == -1 ? GetBestRootNode(midiFile.GetNotes()).Item1 : rootNote);
+            Debug.WriteLine("Root note number: " + rootNoteNumber);
         }
 
-        public void PrepareForEventsSending()
-        {
-            Debug.WriteLine("preparing...");
-            rootNoteNumber = (SevenBitNumber)47;
-        }
+        public void PrepareForEventsSending() {}
 
         public void SendEvent(MidiEvent midiEvent)
         {
-            if (midiEvent is NoteOnEvent)
+            if (midiEvent is NoteOnEvent @event)
             {
-                var note = (NoteOnEvent)midiEvent;
+                var note = @event;
 
                 if (converter.ContainsKey(note.NoteNumber - rootNoteNumber))
                 {
                     VirtualKeyCode key = converter[note.NoteNumber - rootNoteNumber];
                     keyboard.KeyPress(key);
                 }
-
             }
         }
 
-        private static (SevenBitNumber, int) GetBestRootNode(IEnumerable<Note> notes)
+        private (SevenBitNumber, int) GetBestRootNode(IEnumerable<Note> notes)
         {
             var sortedNotesNumbers = notes.Select(note => note.NoteNumber).OrderBy(note => note);
             var bestRoot = sortedNotesNumbers.First();
             var notesCount = sortedNotesNumbers.GroupBy(note => note).ToDictionary(group => group.Key, group => group.Count());
             var bestHits = 0;
+            var bestTotal = 0;
 
-            Debug.WriteLine(notesCount.Select(note => note.Value).Sum());
-            Debug.WriteLine(sortedNotesNumbers.Count());
-
-            foreach (var root in Enumerable.Range(sortedNotesNumbers.First(), sortedNotesNumbers.Last() - 35))
+            foreach (var root in Enumerable.Range(sortedNotesNumbers.First() - 24, sortedNotesNumbers.Last() + 25))
             {
-                var higher = root + 35;
                 var hits = 0;
-                foreach (var noteNumber in notesCount.Keys)
+                var total = 0;
+                foreach (var entry in notesCount)
                 {
-                    if (root <= noteNumber && noteNumber <= higher)
-                    {
-                        hits += notesCount[noteNumber];
-                    }
+                     var note = entry.Key;
+                     var count = entry.Value;
+
+                     if (fifthOctaveStart <= note && note <= eighthOctaveStart)
+                     {
+
+                        if (converter.ContainsKey(note - root)) {
+                            hits += count;
+                        }
+                        total += count;
+                     }
                 }
                 if (hits > bestHits)
                 {
                     bestHits = hits;
                     bestRoot = (SevenBitNumber)root;
+                    bestTotal = total;
                 }
             }
+
+            Debug.WriteLine(bestHits + " in " + bestTotal + " | best root note is " + ((int)bestRoot).ToString());
 
             return (bestRoot, bestHits);
         }
