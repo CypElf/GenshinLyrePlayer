@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Windows.Controls;
 using WindowsInput;
 using WindowsInput.Native;
 
@@ -25,6 +26,8 @@ namespace GenshinLyrePlayer
         // The choice made here is to select the interval of notes between the fifth and eighth octaves as it covers the middle notes, and in general most of the notes will be in this interval
         private static readonly int fifthOctaveStart = 48;
         private static readonly int eighthOctaveStart = 84;
+
+        private ProgressBar progressBar;
 
         private static readonly List<int> semiTones = new()
         {
@@ -146,8 +149,9 @@ namespace GenshinLyrePlayer
             VirtualKeyCode.VK_U,
         };
 
-        public MIDIToKeyboardConverter(MidiFile midiFile, KeyboardLayout layout, int? rootNote)
+        public MIDIToKeyboardConverter(MidiFile midiFile, KeyboardLayout layout, int? rootNote, ProgressBar progressBar)
         {
+            this.progressBar = progressBar;
             List<VirtualKeyCode> lyreKeys;
 
             if (layout == KeyboardLayout.QWERTY)
@@ -176,6 +180,7 @@ namespace GenshinLyrePlayer
             if (midiEvent is NoteOnEvent @event)
             {
                 var note = @event;
+                progressBar.Dispatcher.Invoke(() => progressBar.Value++);
 
                 if (converter.ContainsKey(note.NoteNumber - rootNoteNumber))
                 {

@@ -9,6 +9,7 @@ using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Multimedia;
 using System;
 using System.Text.Json;
+using Melanchall.DryWetMidi.Interaction;
 
 namespace GenshinLyrePlayer
 {
@@ -71,7 +72,7 @@ namespace GenshinLyrePlayer
                 if (e.KeyPressed == (Key)Enum.Parse(typeof(Key), (string)cfg.stopKey) && playback != null && playback.IsRunning)
                 {
                     playback.Stop();
-                    playingTextBlock.Text = "IDLE";
+                    setIdle();
                 }
 
                 if (e.KeyPressed == (Key)Enum.Parse(typeof(Key), (string)cfg.startKey) && MidiFilesList.Items.Count > 0 && (playback == null || !playback.IsRunning))
@@ -90,14 +91,17 @@ namespace GenshinLyrePlayer
 
                         var layout = (KeyboardLayout)Enum.Parse(typeof(KeyboardLayout), cfg.keyboardLayout);
 
-                        var player = new MIDIToKeyboardConverter(midiFile, layout, cfg.useAutoRoot ? null : cfg.customRoot);
+                        playingTextBlock.Text = "Playing: " + ((ListBoxItem)MidiFilesList.SelectedItem).Content;
+                        progressBar.Visibility = Visibility.Visible;
+                        progressBar.Value = 0;
+                        progressBar.Maximum = midiFile.GetNotes().Count;
+
+                        var player = new MIDIToKeyboardConverter(midiFile, layout, cfg.useAutoRoot ? null : cfg.customRoot, progressBar);
 
                         playback = midiFile.GetPlayback(player);
                         playback.Start();
 
-                        playback.Finished += (_, _) => Dispatcher.Invoke(() => playingTextBlock.Text = "IDLE");
-
-                        playingTextBlock.Text = "Playing: " + ((ListBoxItem)MidiFilesList.SelectedItem).Content;
+                        playback.Finished += (_, _) => Dispatcher.Invoke(() => setIdle());
                     }
                 }
             }
@@ -119,6 +123,12 @@ namespace GenshinLyrePlayer
             p.Start();
         }
 
+        private void setIdle()
+        {
+            playingTextBlock.Text = "IDLE";
+            progressBar.Visibility = Visibility.Hidden;
+        }
+
         private void loadSave()
         {
             try
@@ -138,14 +148,17 @@ namespace GenshinLyrePlayer
                 try
                 {
                     Enum.Parse(typeof(Key), cfg.startKey);
-                } catch {
+                }
+                catch {
                     cfg.startKey = "F6";
                 }
-                
+
                 try
                 {
                     Enum.Parse(typeof(Key), cfg.stopKey);
-                } catch {
+                }
+                catch
+                {
                     cfg.stopKey = "F7";
                 }
             }
