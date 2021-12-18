@@ -9,6 +9,7 @@ using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Multimedia;
 using System;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 
 namespace GenshinLyrePlayer
 {
@@ -19,6 +20,8 @@ namespace GenshinLyrePlayer
         private List<FileStream> midiFiles = new List<FileStream>();
         private Playback playback;
         private bool useAutoRoot;
+
+        private bool configLoaded = false;
 
         public MainWindow()
         {
@@ -39,19 +42,23 @@ namespace GenshinLyrePlayer
                 var midiFilesNames = Directory.GetFiles("songs");
                 foreach (var midiFileName in midiFilesNames)
                 {
-                    midiFiles.Add(File.OpenRead(midiFileName));
+                    if (midiFileName.EndsWith(".mid"))
+                    {
+                        midiFiles.Add(File.OpenRead(midiFileName));
+                    }
                 }
             }
 
             foreach (var midiFile in midiFiles)
             {
                 var listItem = new ListBoxItem();
-                listItem.Content = midiFile.Name.Split("\\").Last();
+                listItem.Content = string.Join(".", midiFile.Name.Split("\\").Last().Split(".").SkipLast(1));
                 listItem.FontSize = 14;
                 MidiFilesList.Items.Add(listItem);
             }
 
-            foreach (KeyboardLayout value in Enum.GetValues(typeof(KeyboardLayout))) {
+            foreach (KeyboardLayout value in Enum.GetValues(typeof(KeyboardLayout)))
+            {
                 var item = new ComboBoxItem();
                 item.Tag = value;
                 item.Content = value.ToString();
@@ -64,6 +71,8 @@ namespace GenshinLyrePlayer
             listener = new LowLevelKeyboardListener();
             listener.OnKeyPressed += onKeyPressed;
             listener.HookKeyboard();
+
+            loadSave();
         }
 
         private void onKeyPressed(object sender, KeyPressedArgs e)
@@ -73,6 +82,7 @@ namespace GenshinLyrePlayer
             if (e.KeyPressed == Key.F7 && playback != null && playback.IsRunning)
             {
                 playback.Stop();
+                playingTextBlock.Text = "IDLE";
             }
 
             if (e.KeyPressed == Key.F6 && MidiFilesList.Items.Count > 0 && (playback == null || !playback.IsRunning))
@@ -95,8 +105,20 @@ namespace GenshinLyrePlayer
 
                     playback = midiFile.GetPlayback(player);
                     playback.Start();
+
+                    playingTextBlock.Text = "Playing: " + ((ListBoxItem)MidiFilesList.SelectedItem).Content;
                 }
             }
+        }
+
+        private void onLayoutChanged(object sender, SelectionChangedEventArgs e)
+        {
+            save();
+        }
+
+        private void onCustomNoteChanged(object sender, TextChangedEventArgs e)
+        {
+            save();
         }
 
         private void onAutoRootChecked(object sender, RoutedEventArgs e)
@@ -107,12 +129,14 @@ namespace GenshinLyrePlayer
                 customRootInput.IsEnabled = false;
                 customRootInput.Text = "";
             }
+            save();
         }
 
         private void onAutoRootUnchecked(object sender, RoutedEventArgs e)
         {
             useAutoRoot = false;
             customRootInput.IsEnabled = true;
+            save();
         }
 
         private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
@@ -129,6 +153,38 @@ namespace GenshinLyrePlayer
             {
                 e.Handled = true;
             }
+        }
+
+        private void save()
+        {
+            if (configLoaded && layoutComboBox != null && autoRootCheckbox != null && customRootInput != null)
+            {
+                var config = new Config();
+                config.keyboardLayout = (string)((ComboBoxItem)layoutComboBox.SelectedItem).Content;
+                config.useAutoRoot = (bool)autoRootCheckbox.IsChecked;
+                if (!config.useAutoRoot)
+                {
+                    config.customRoot = customRootInput.Text.Length > 0 ? int.Parse(customRootInput.Text) : null;
+                }
+                else
+                {
+                    config.customRoot = null;
+                }
+                var jsonData = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText("config.json", jsonData);
+            }
+        }
+
+        private void loadSave()
+        {
+            var config = JsonSerializer.Deserialize<Config>(File.ReadAllText("config.json"));
+            layoutComboBox.Text = config.keyboardLayout; // this doesn't just change the text value but will select the right ComboBoxItem matching
+            autoRootCheckbox.IsChecked = config.useAutoRoot;
+            if (!config.useAutoRoot)
+            {
+                customRootInput.Text = config.customRoot.ToString();
+            }
+            configLoaded = true;
         }
     }
 }

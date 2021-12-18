@@ -6,22 +6,23 @@
         mc:Ignorable="d"
         Title="Genshin Lyre Player" Height="450" Width="800" Closing="WindowClosing" Loaded="WindowLoaded">
     <TabControl>
-        <TabItem Header="Dashboard">
+        <TabItem Header="Player">
             <Grid>
-                <ListBox x:Name="MidiFilesList" Margin="30,110,0,0" HorizontalAlignment="Left" Width="163" Height="250" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+                <ListBox x:Name="MidiFilesList" Margin="30,77,0,0" HorizontalAlignment="Left" Width="202" Height="281" VerticalAlignment="Top"/>
                 <TextBlock HorizontalAlignment="Left" Margin="45,30,0,0" Text="Select a MIDI file" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18" Grid.ColumnSpan="2"/>
+                <TextBlock x:Name="playingTextBlock" HorizontalAlignment="Left" Margin="259,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="18" Text="IDLE" RenderTransformOrigin="-4.492,0.557" Width="490" TextAlignment="Center"/>
             </Grid>
         </TabItem>
         <TabItem Header="Settings">
             <Grid>
-                <ComboBox x:Name="layoutComboBox" HorizontalAlignment="Left" Margin="160,30,0,0" Width="120" Height="22" VerticalAlignment="Top">
+                <ComboBox x:Name="layoutComboBox" HorizontalAlignment="Left" Margin="160,30,0,0" Width="120" Height="22" VerticalAlignment="Top" SelectionChanged="onLayoutChanged">
                 </ComboBox>
                 <TextBlock HorizontalAlignment="Left" Margin="30,30,0,0" Text="Keyboard layout" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16"/>
                 <Separator Margin="20,120,20,0" VerticalAlignment="Top" Height="16"/>
                 <TextBlock HorizontalAlignment="Left" Margin="55,160,0,0" Text="Advanced" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
                 <CheckBox x:Name="autoRootCheckbox"  Content="detect the best root note to use" HorizontalAlignment="Left" Margin="55,214,0,0" VerticalAlignment="Top" IsChecked="True" Checked="onAutoRootChecked" Unchecked="onAutoRootUnchecked"/>
-                <TextBlock HorizontalAlignment="Left" Margin="67,261,0,0" Text="Custom root note to use :" TextWrapping="Wrap" VerticalAlignment="Top"/>
-                <TextBox x:Name="customRootInput" PreviewTextInput="NumberValidationTextBox" HorizontalAlignment="Left" Margin="229,260,0,0" Text="" VerticalAlignment="Top" Width="110" IsEnabled="False" Height="26"/>
+                <TextBlock HorizontalAlignment="Left" Margin="58,261,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="265"><Run Text="Custom root note to use"/><Run Text=" (from 0 to 127)"/><Run Language="fr-fr" Text=" "/><Run Text=":"/></TextBlock>
+                <TextBox x:Name="customRootInput" PreviewTextInput="NumberValidationTextBox" HorizontalAlignment="Left" Margin="295,258,0,0" Text="" VerticalAlignment="Top" Width="110" IsEnabled="False" Height="26" TextChanged="onCustomNoteChanged"/>
             </Grid>
         </TabItem>
     </TabControl>
