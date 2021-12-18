@@ -10,19 +10,27 @@
             <Grid>
                 <ListBox x:Name="MidiFilesList" Margin="30,77,0,0" HorizontalAlignment="Left" Width="202" Height="281" VerticalAlignment="Top"/>
                 <TextBlock HorizontalAlignment="Left" Margin="45,30,0,0" Text="Select a MIDI file" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18" Grid.ColumnSpan="2"/>
-                <TextBlock x:Name="playingTextBlock" HorizontalAlignment="Left" Margin="259,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="18" Text="IDLE" RenderTransformOrigin="-4.492,0.557" Width="490" TextAlignment="Center"/>
+                <TextBlock x:Name="playingTextBlock" HorizontalAlignment="Left" Margin="259,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="26" Text="IDLE" RenderTransformOrigin="-4.492,0.557" Width="479" TextAlignment="Center"/>
             </Grid>
         </TabItem>
         <TabItem Header="Settings">
             <Grid>
-                <ComboBox x:Name="layoutComboBox" HorizontalAlignment="Left" Margin="160,30,0,0" Width="120" Height="22" VerticalAlignment="Top" SelectionChanged="onLayoutChanged">
+                <ComboBox x:Name="layoutComboBox" HorizontalAlignment="Left" Margin="326,71,0,0" Width="131" Height="28" VerticalAlignment="Top" SelectionChanged="onLayoutChanged" FontSize="16">
                 </ComboBox>
-                <TextBlock HorizontalAlignment="Left" Margin="30,30,0,0" Text="Keyboard layout" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16"/>
-                <Separator Margin="20,120,20,0" VerticalAlignment="Top" Height="16"/>
-                <TextBlock HorizontalAlignment="Left" Margin="55,160,0,0" Text="Advanced" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
-                <CheckBox x:Name="autoRootCheckbox"  Content="detect the best root note to use" HorizontalAlignment="Left" Margin="55,214,0,0" VerticalAlignment="Top" IsChecked="True" Checked="onAutoRootChecked" Unchecked="onAutoRootUnchecked"/>
-                <TextBlock HorizontalAlignment="Left" Margin="58,261,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="265"><Run Text="Custom root note to use"/><Run Text=" (from 0 to 127)"/><Run Language="fr-fr" Text=" "/><Run Text=":"/></TextBlock>
-                <TextBox x:Name="customRootInput" PreviewTextInput="NumberValidationTextBox" HorizontalAlignment="Left" Margin="295,258,0,0" Text="" VerticalAlignment="Top" Width="110" IsEnabled="False" Height="26" TextChanged="onCustomNoteChanged"/>
+                <TextBlock HorizontalAlignment="Left" Margin="161,69,0,0" Text="Keyboard layout" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="20"/>
+                <CheckBox x:Name="autoRootCheckbox" VerticalContentAlignment="Center" VerticalAlignment="Top" FlowDirection="RightToLeft" Content="Detect the best root note to use" HorizontalAlignment="Left" Margin="161,225,0,0" IsChecked="True" Checked="onAutoRootChecked" Unchecked="onAutoRootUnchecked" Height="30" Width="314" RenderTransformOrigin="0.5,0.5" Padding="15,-1,0,0" FontSize="20" >
+                    <CheckBox.Resources>
+                        <Style TargetType="{x:Type Path}">
+                            <Setter Property="FlowDirection" Value="LeftToRight" />
+                        </Style>
+                    </CheckBox.Resources>
+                </CheckBox>
+                <TextBlock HorizontalAlignment="Left" Margin="162,275,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="313" FontSize="20"><Run Text="Custom root note to use"/><Run Text=" (0 "/><Run Language="fr-fr" Text="-"/><Run Text=" 127)"/><Run Text=" "/><Run Text=":"/></TextBlock>
+                <TextBox x:Name="customRootInput" VerticalContentAlignment="Center" PreviewTextInput="NumberValidationTextBox" HorizontalAlignment="Left" Margin="489,274,0,0" Text="" VerticalAlignment="Top" Width="52" IsEnabled="False" Height="32" TextChanged="onCustomNoteChanged" FontSize="18"/>
+                <TextBlock HorizontalAlignment="Left" Margin="161,124,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="20"><Run Language="fr-fr" Text="Start key :"/></TextBlock>
+                <TextBlock HorizontalAlignment="Left" Margin="161,177,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="20"><Run Text="St"/><Run Language="fr-fr" Text="op "/><Run Text="key :"/></TextBlock>
+                <Button x:Name="startKeyButton" Content="F6" HorizontalAlignment="Left" Margin="265,128,0,0" VerticalAlignment="Top" Click="onStartButtonClick" Padding="10,1,10,1" FontSize="16" KeyDown="onStartButtonKeyDown"/>
+                <Button x:Name="stopKeyButton" Content="F7" HorizontalAlignment="Left" Margin="265,178,0,0" VerticalAlignment="Top" Click="onStopButtonClick" Padding="10,1,10,1" FontSize="16" KeyDown="onStopButtonKeyDown"/>
             </Grid>
         </TabItem>
     </TabControl>
