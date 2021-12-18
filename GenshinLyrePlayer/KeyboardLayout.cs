@@ -3,6 +3,7 @@
     public enum KeyboardLayout
     {
         QWERTY,
+        QWERTZ,
         AZERTY
     }
 }

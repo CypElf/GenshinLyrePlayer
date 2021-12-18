@@ -86,6 +86,36 @@ namespace GenshinLyrePlayer
             VirtualKeyCode.VK_U
         };
 
+        private static readonly List<VirtualKeyCode> qwertzLyreKeys = new()
+        {
+            // F-clef
+            VirtualKeyCode.VK_Y,
+            VirtualKeyCode.VK_X,
+            VirtualKeyCode.VK_C,
+            VirtualKeyCode.VK_V,
+            VirtualKeyCode.VK_B,
+            VirtualKeyCode.VK_N,
+            VirtualKeyCode.VK_M,
+
+            // C-clef
+            VirtualKeyCode.VK_A,
+            VirtualKeyCode.VK_S,
+            VirtualKeyCode.VK_D,
+            VirtualKeyCode.VK_F,
+            VirtualKeyCode.VK_G,
+            VirtualKeyCode.VK_H,
+            VirtualKeyCode.VK_J,
+
+            // G-clef
+            VirtualKeyCode.VK_Q,
+            VirtualKeyCode.VK_W,
+            VirtualKeyCode.VK_E,
+            VirtualKeyCode.VK_R,
+            VirtualKeyCode.VK_T,
+            VirtualKeyCode.VK_Z,
+            VirtualKeyCode.VK_U,
+        };
+
         private static readonly List<VirtualKeyCode> qwertyLyreKeys = new()
         {
             // F-clef
@@ -118,7 +148,22 @@ namespace GenshinLyrePlayer
 
         public MIDIToKeyboardConverter(MidiFile midiFile, KeyboardLayout layout, int rootNote = -1)
         {
-            converter = semiTones.Zip(layout == KeyboardLayout.QWERTY ? qwertyLyreKeys : azertyLyreKeys, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
+            List<VirtualKeyCode> lyreKeys;
+
+            if (layout == KeyboardLayout.QWERTY)
+            {
+                lyreKeys = qwertyLyreKeys;
+            }
+            else if (layout == KeyboardLayout.QWERTZ)
+            {
+                lyreKeys = qwertzLyreKeys;
+            }
+            else
+            {
+                lyreKeys = azertyLyreKeys;
+            }
+
+            converter = semiTones.Zip(lyreKeys, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
 
             rootNoteNumber = (SevenBitNumber)(rootNote == -1 ? GetBestRootNode(midiFile.GetNotes()).Item1 : rootNote);
             Debug.WriteLine("Root note number: " + rootNoteNumber);
