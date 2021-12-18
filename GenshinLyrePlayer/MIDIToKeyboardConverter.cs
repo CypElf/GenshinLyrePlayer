@@ -13,9 +13,7 @@ namespace GenshinLyrePlayer
 {
     public sealed class MIDIToKeyboardConverter : IOutputDevice
     {
-        #pragma warning disable 67
         public event EventHandler<MidiEventSentEventArgs> EventSent;
-        #pragma warning restore 67
 
         private readonly SevenBitNumber rootNoteNumber;
         private static readonly IKeyboardSimulator keyboard = new InputSimulator().Keyboard;

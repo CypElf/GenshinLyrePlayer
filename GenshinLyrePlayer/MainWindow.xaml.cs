@@ -95,6 +95,8 @@ namespace GenshinLyrePlayer
                         playback = midiFile.GetPlayback(player);
                         playback.Start();
 
+                        playback.Finished += (_, _) => Dispatcher.Invoke(() => playingTextBlock.Text = "IDLE");
+
                         playingTextBlock.Text = "Playing: " + ((ListBoxItem)MidiFilesList.SelectedItem).Content;
                     }
                 }
