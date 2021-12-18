@@ -13,7 +13,9 @@ namespace GenshinLyrePlayer
 {
     public sealed class MIDIToKeyboardConverter : IOutputDevice
     {
+        #pragma warning disable 67
         public event EventHandler<MidiEventSentEventArgs> EventSent;
+        #pragma warning restore 67
 
         private readonly SevenBitNumber rootNoteNumber;
         private static readonly IKeyboardSimulator keyboard = new InputSimulator().Keyboard;
@@ -146,7 +148,7 @@ namespace GenshinLyrePlayer
             VirtualKeyCode.VK_U,
         };
 
-        public MIDIToKeyboardConverter(MidiFile midiFile, KeyboardLayout layout, int rootNote = -1)
+        public MIDIToKeyboardConverter(MidiFile midiFile, KeyboardLayout layout, int? rootNote)
         {
             List<VirtualKeyCode> lyreKeys;
 
@@ -165,7 +167,7 @@ namespace GenshinLyrePlayer
 
             converter = semiTones.Zip(lyreKeys, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
 
-            rootNoteNumber = (SevenBitNumber)(rootNote == -1 ? GetBestRootNode(midiFile.GetNotes()).Item1 : rootNote);
+            rootNoteNumber = (SevenBitNumber)(rootNote == null ? GetBestRootNode(midiFile.GetNotes()).Item1 : rootNote);
             Debug.WriteLine("Root note number: " + rootNoteNumber);
         }
 

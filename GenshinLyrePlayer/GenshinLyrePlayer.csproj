@@ -5,6 +5,7 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>images/icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,8 +16,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="images\help.png" />
+    <None Remove="images\settings.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="InputSimulatorPlus" Version="1.0.7" />
     <PackageReference Include="Melanchall.DryWetMidi" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="images\help.png" />
+    <Resource Include="images\settings.png" />
   </ItemGroup>
 
 </Project>

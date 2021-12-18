@@ -8,7 +8,6 @@ using System.Windows.Input;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Multimedia;
 using System;
-using System.Text.RegularExpressions;
 using System.Text.Json;
 
 namespace GenshinLyrePlayer
@@ -19,13 +18,10 @@ namespace GenshinLyrePlayer
         private LowLevelKeyboardListener listener = new LowLevelKeyboardListener();
         private List<FileStream> midiFiles = new List<FileStream>();
         private Playback playback;
-        private bool useAutoRoot;
-        private string startKeyBackup;
-        private string stopKeyBackup;
-        private bool listeningForStartKey = false;
-        private bool listeningForStopKey = false;
 
-        private bool configLoaded = false;
+        private bool disableInputs = false;
+
+        private Config cfg;
 
         public MainWindow()
         {
@@ -61,17 +57,6 @@ namespace GenshinLyrePlayer
                 MidiFilesList.Items.Add(listItem);
             }
 
-            foreach (KeyboardLayout value in Enum.GetValues(typeof(KeyboardLayout)))
-            {
-                var item = new ComboBoxItem();
-                item.Tag = value;
-                item.Content = value.ToString();
-                if (value == KeyboardLayout.QWERTY) item.IsSelected = true;
-                layoutComboBox.Items.Add(item);
-            }
-
-            useAutoRoot = autoRootCheckbox.IsChecked ?? false;
-
             listener = new LowLevelKeyboardListener();
             listener.OnKeyPressed += onKeyPressed;
             listener.HookKeyboard();
@@ -81,17 +66,15 @@ namespace GenshinLyrePlayer
 
         private void onKeyPressed(object sender, KeyPressedArgs e)
         {
-            if (!listeningForStartKey && !listeningForStopKey)
+            if (!disableInputs)
             {
-                Debug.WriteLine("PRESSED " + e.KeyPressed.ToString());
-
-                if (e.KeyPressed == (Key)Enum.Parse(typeof(Key), (string)stopKeyButton.Content) && playback != null && playback.IsRunning)
+                if (e.KeyPressed == (Key)Enum.Parse(typeof(Key), (string)cfg.stopKey) && playback != null && playback.IsRunning)
                 {
                     playback.Stop();
                     playingTextBlock.Text = "IDLE";
                 }
 
-                if (e.KeyPressed == (Key)Enum.Parse(typeof(Key), (string)startKeyButton.Content) && MidiFilesList.Items.Count > 0 && (playback == null || !playback.IsRunning))
+                if (e.KeyPressed == (Key)Enum.Parse(typeof(Key), (string)cfg.startKey) && MidiFilesList.Items.Count > 0 && (playback == null || !playback.IsRunning))
                 {
                     {
                         MidiFile midiFile;
@@ -105,9 +88,9 @@ namespace GenshinLyrePlayer
                             return;
                         }
 
-                        var layout = (KeyboardLayout)((ComboBoxItem)layoutComboBox.SelectedItem).Tag;
+                        var layout = (KeyboardLayout)Enum.Parse(typeof(KeyboardLayout), cfg.keyboardLayout);
 
-                        var player = new MIDIToKeyboardConverter(midiFile, layout, useAutoRoot ? -1 : int.Parse(customRootInput.Text));
+                        var player = new MIDIToKeyboardConverter(midiFile, layout, cfg.useAutoRoot ? null : cfg.customRoot);
 
                         playback = midiFile.GetPlayback(player);
                         playback.Start();
@@ -118,157 +101,53 @@ namespace GenshinLyrePlayer
             }
         }
 
-        private void onStartButtonClick(object sender, RoutedEventArgs e)
+        private void OnSettingsClick(object sender, RoutedEventArgs e)
         {
-            if (!listeningForStartKey)
-            {
-                startKeyBackup = (string)startKeyButton.Content;
-                startKeyButton.Content = "press a key";
-            }
-            else
-            {
-                startKeyButton.Content = startKeyBackup;
-            }
-            listeningForStartKey = !listeningForStartKey;
+            Settings settingsWindow = new Settings(cfg);
+            disableInputs = true;
+            settingsWindow.Show();
+            settingsWindow.Closed += (_, _) => disableInputs = false;
         }
 
-        private void onStartButtonKeyDown(object sender, KeyEventArgs e)
+        private void OnHelpClick(object sender, RoutedEventArgs e)
         {
-            if (listeningForStartKey)
-            {
-                startKeyButton.Content = e.Key.ToString();
-                listeningForStartKey = false;
-                save();
-            }
-        }
-
-        private void onStopButtonClick(object sender, RoutedEventArgs e)
-        {
-            if (!listeningForStopKey)
-            {
-                stopKeyBackup = (string)stopKeyButton.Content;
-                stopKeyButton.Content = "press a key";
-            }
-            else
-            {
-                stopKeyButton.Content = stopKeyBackup;
-            }
-            listeningForStopKey = !listeningForStopKey;
-        }
-
-        private void onStopButtonKeyDown(object sender, KeyEventArgs e)
-        {
-            if (listeningForStopKey)
-            {
-                stopKeyButton.Content = e.Key.ToString();
-                listeningForStopKey = false;
-                save();
-            }
-        }
-
-        private void onLayoutChanged(object sender, SelectionChangedEventArgs e)
-        {
-            save();
-        }
-
-        private void onCustomNoteChanged(object sender, TextChangedEventArgs e)
-        {
-            save();
-        }
-
-        private void onAutoRootChecked(object sender, RoutedEventArgs e)
-        {
-            useAutoRoot = true;
-            if (customRootInput != null)
-            {
-                customRootInput.IsEnabled = false;
-                customRootInput.Text = "";
-            }
-            save();
-        }
-
-        private void onAutoRootUnchecked(object sender, RoutedEventArgs e)
-        {
-            useAutoRoot = false;
-            customRootInput.IsEnabled = true;
-            save();
-        }
-
-        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
-        {
-            var regex = new Regex("[0-9]+");
-            var isMatch = regex.IsMatch(e.Text);
-            if (isMatch)
-            {
-                var number = int.Parse(((TextBox)sender).Text + e.Text);
-                var isOk = number >= 0 && number < 128;
-                e.Handled = !isOk;
-            }
-            else
-            {
-                e.Handled = true;
-            }
-        }
-
-        private void save()
-        {
-            if (configLoaded && layoutComboBox != null && autoRootCheckbox != null && customRootInput != null)
-            {
-                var config = new Config();
-                config.keyboardLayout = (string)((ComboBoxItem)layoutComboBox.SelectedItem).Content;
-                config.startKey = (string)startKeyButton.Content;
-                config.stopKey = (string)stopKeyButton.Content;
-                config.useAutoRoot = (bool)autoRootCheckbox.IsChecked;
-                if (!config.useAutoRoot)
-                {
-                    config.customRoot = customRootInput.Text.Length > 0 ? int.Parse(customRootInput.Text) : null;
-                }
-                else
-                {
-                    config.customRoot = null;
-                }
-                var jsonData = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText("config.json", jsonData);
-            }
+            Process p = new Process();
+            p.StartInfo.UseShellExecute = true;
+            p.StartInfo.FileName = "https://github.com/CypElf/GenshinLyrePlayer";
+            p.Start();
         }
 
         private void loadSave()
         {
             try
             {
-                var config = JsonSerializer.Deserialize<Config>(File.ReadAllText("config.json"));
+                cfg = JsonSerializer.Deserialize<Config>(File.ReadAllText("config.json"));
 
-                autoRootCheckbox.IsChecked = config.useAutoRoot;
+                // check if the stored enum fields are valid by trying to convert them to their enum variant
+
+                try
+                {
+                    Enum.Parse(typeof(KeyboardLayout), cfg.keyboardLayout);
+                }
+                catch {
+                    cfg.keyboardLayout = "QWERTY";
+                }
+
+                try
+                {
+                    Enum.Parse(typeof(Key), cfg.startKey);
+                } catch {
+                    cfg.startKey = "F6";
+                }
                 
-                if (!config.useAutoRoot)
+                try
                 {
-                    customRootInput.Text = config.customRoot.ToString();
+                    Enum.Parse(typeof(Key), cfg.stopKey);
+                } catch {
+                    cfg.stopKey = "F7";
                 }
-
-                // check if the keyboard layout is valid by trying to convert it to its KeyboardLayout variant
-                try
-                {
-                    Enum.Parse(typeof(KeyboardLayout), config.keyboardLayout);
-                    layoutComboBox.Text = config.keyboardLayout; // this doesn't just change the text value but will select the right ComboBoxItem matching
-                }
-                catch {}
-
-                // check if the keys in the config are valid by trying to convert them to their Key variant
-                try
-                {
-                    Enum.Parse(typeof(Key), config.startKey);
-                    startKeyButton.Content = config.startKey;
-                } catch {}
-
-                try
-                {
-                    Enum.Parse(typeof(Key), config.stopKey);
-                    stopKeyButton.Content = config.stopKey;
-                } catch {}
             }
             catch {}
-
-            configLoaded = true;
         }
     }
 }

@@ -1,0 +1,26 @@
+﻿<Window x:Class="GenshinLyrePlayer.Settings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Settings" Height="300" Width="450" Loaded="WindowLoaded">
+    <Grid>
+        <ComboBox x:Name="layoutComboBox" HorizontalAlignment="Left" Margin="197,22,0,0" Width="131" Height="26" VerticalAlignment="Top" SelectionChanged="onLayoutChanged" FontSize="14"/>
+        <TextBlock HorizontalAlignment="Left" Margin="63,23,0,0" Text="Keyboard layout" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16"/>
+        <CheckBox x:Name="autoRootCheckbox" VerticalContentAlignment="Center" VerticalAlignment="Top" FlowDirection="RightToLeft" Content="Detect the best root note to use" HorizontalAlignment="Left" Margin="63,160,0,0" IsChecked="True" Checked="onAutoRootChecked" Unchecked="onAutoRootUnchecked" Height="30" Width="257" RenderTransformOrigin="0.5,0.5" Padding="15,-1,0,0" FontSize="16" >
+            <CheckBox.Resources>
+                <Style TargetType="{x:Type Path}">
+                    <Setter Property="FlowDirection" Value="LeftToRight" />
+                </Style>
+            </CheckBox.Resources>
+        </CheckBox>
+        <TextBlock HorizontalAlignment="Left" Margin="63,212,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="313" FontSize="16"><Run Text="Custom root note to use"/><Run Text=" (0 "/><Run Language="fr-fr" Text="-"/><Run Text=" 127)"/><Run Text=" "/><Run Text=":"/></TextBlock>
+        <TextBox x:Name="customRootInput" VerticalContentAlignment="Center" PreviewTextInput="NumberValidationTextBox" HorizontalAlignment="Left" Margin="324,209,0,0" Text="" VerticalAlignment="Top" Width="52" IsEnabled="False" Height="27" TextChanged="onCustomNoteChanged" FontSize="15"/>
+        <TextBlock HorizontalAlignment="Left" Margin="63,68,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16"><Run Language="fr-fr" Text="Start key :"/></TextBlock>
+        <TextBlock HorizontalAlignment="Left" Margin="63,116,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16"><Run Text="St"/><Run Language="fr-fr" Text="op "/><Run Text="key :"/></TextBlock>
+        <Button x:Name="startKeyButton" Content="F6" HorizontalAlignment="Left" Margin="151,66,0,0" VerticalAlignment="Top" Click="onStartButtonClick" Padding="10,1,10,1" FontSize="16" KeyDown="onStartButtonKeyDown"/>
+        <Button x:Name="stopKeyButton" Content="F7" HorizontalAlignment="Left" Margin="151,114,0,0" VerticalAlignment="Top" Click="onStopButtonClick" Padding="10,1,10,1" FontSize="16" KeyDown="onStopButtonKeyDown"/>
+
+    </Grid>
+</Window>
