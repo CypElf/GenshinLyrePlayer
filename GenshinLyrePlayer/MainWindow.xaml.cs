@@ -91,12 +91,18 @@ namespace GenshinLyrePlayer
 
                         var layout = (KeyboardLayout)Enum.Parse(typeof(KeyboardLayout), cfg.keyboardLayout);
 
-                        playingTextBlock.Text = "Playing: " + ((ListBoxItem)MidiFilesList.SelectedItem).Content;
+                        playingTextBlock.Text = "Playing " + ((ListBoxItem)MidiFilesList.SelectedItem).Content;
                         progressBar.Visibility = Visibility.Visible;
                         progressBar.Value = 0;
                         progressBar.Maximum = midiFile.GetNotes().Count;
 
                         var player = new MIDIToKeyboardConverter(midiFile, layout, cfg.useAutoRoot ? null : cfg.customRoot, progressBar);
+
+                        var hits = player.hitsForRootNote(player.rootNoteNumber);
+                        var notesCount = midiFile.GetNotes().Count;
+
+                        infoTextBlock.Text = $"using root note {player.rootNoteNumber} with a restitution of {hits}/{notesCount} notes ({Math.Round((double)hits / notesCount * 100, 2)}%)";
+                        infoTextBlock.Visibility = Visibility.Visible;
 
                         playback = midiFile.GetPlayback(player);
                         playback.Start();
@@ -127,6 +133,7 @@ namespace GenshinLyrePlayer
         {
             playingTextBlock.Text = "IDLE";
             progressBar.Visibility = Visibility.Hidden;
+            infoTextBlock.Visibility = Visibility.Hidden;
         }
 
         private void loadSave()

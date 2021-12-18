@@ -16,7 +16,8 @@ namespace GenshinLyrePlayer
     {
         public event EventHandler<MidiEventSentEventArgs> EventSent;
 
-        private readonly SevenBitNumber rootNoteNumber;
+        private readonly MidiFile midiFile;
+        public readonly SevenBitNumber rootNoteNumber;
         private static readonly IKeyboardSimulator keyboard = new InputSimulator().Keyboard;
         private readonly Dictionary<int, VirtualKeyCode> converter;
 
@@ -151,6 +152,7 @@ namespace GenshinLyrePlayer
 
         public MIDIToKeyboardConverter(MidiFile midiFile, KeyboardLayout layout, int? rootNote, ProgressBar progressBar)
         {
+            this.midiFile = midiFile;
             this.progressBar = progressBar;
             List<VirtualKeyCode> lyreKeys;
 
@@ -169,8 +171,7 @@ namespace GenshinLyrePlayer
 
             converter = semiTones.Zip(lyreKeys, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
 
-            rootNoteNumber = (SevenBitNumber)(rootNote == null ? GetBestRootNode(midiFile.GetNotes()).Item1 : rootNote);
-            Debug.WriteLine("Root note number: " + rootNoteNumber);
+            rootNoteNumber = (SevenBitNumber)(rootNote == null ? GetBestRootNode() : rootNote);
         }
 
         public void PrepareForEventsSending() {}
@@ -190,13 +191,25 @@ namespace GenshinLyrePlayer
             }
         }
 
-        private (SevenBitNumber, int) GetBestRootNode(IEnumerable<Note> notes)
+        public int hitsForRootNote(SevenBitNumber root)
         {
-            var sortedNotesNumbers = notes.Select(note => note.NoteNumber).OrderBy(note => note);
+            int hits = 0;
+            foreach (var note in midiFile.GetNotes())
+            {
+                if (converter.ContainsKey(note.NoteNumber - root))
+                {
+                    hits++;
+                }
+            }
+            return hits;
+        }
+
+        private SevenBitNumber GetBestRootNode()
+        {
+            var sortedNotesNumbers = midiFile.GetNotes().Select(note => note.NoteNumber).OrderBy(note => note);
             var bestRoot = sortedNotesNumbers.First();
             var notesCount = sortedNotesNumbers.GroupBy(note => note).ToDictionary(group => group.Key, group => group.Count());
             var bestHits = 0;
-            var bestTotal = 0;
 
             foreach (var root in Enumerable.Range(sortedNotesNumbers.First() - 24, sortedNotesNumbers.Last() + 25))
             {
@@ -220,13 +233,10 @@ namespace GenshinLyrePlayer
                 {
                     bestHits = hits;
                     bestRoot = (SevenBitNumber)root;
-                    bestTotal = total;
                 }
             }
 
-            Debug.WriteLine(bestHits + " in " + bestTotal + " | best root note is " + ((int)bestRoot).ToString());
-
-            return (bestRoot, bestHits);
+            return bestRoot;
         }
     }
 }
