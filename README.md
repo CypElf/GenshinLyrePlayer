@@ -4,7 +4,7 @@
 
 # GenshinLyrePlayer
 ## Presentation
-<img src="./res/icon.ico" align="left" width="50">
+<img src="./res/icon.ico" align="left" width="60">
 
 **GenshinLyrePlayer** is a free, open source and easy to use application that allows you to play automatically any real world song you like in Genshin Impact with the musical instruments gadgets (i.e. the [Windsong Lyre](https://genshin-impact.fandom.com/wiki/Windsong_Lyre) and the [Floral Zither](https://genshin-impact.fandom.com/wiki/Floral_Zither)).
 
