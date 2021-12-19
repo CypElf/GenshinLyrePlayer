@@ -1,10 +1,10 @@
-﻿using System.Windows;
+﻿using System;
+using System.IO;
+using System.Windows;
+using System.Text.Json;
 using System.Windows.Input;
 using System.Text.RegularExpressions;
 using System.Windows.Controls;
-using System.Text.Json;
-using System.IO;
-using System;
 
 namespace GenshinLyrePlayer
 {

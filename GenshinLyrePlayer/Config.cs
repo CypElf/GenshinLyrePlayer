@@ -1,6 +1,4 @@
-﻿using System.Windows.Input;
-
-namespace GenshinLyrePlayer
+﻿namespace GenshinLyrePlayer
 {
     public class Config
     {

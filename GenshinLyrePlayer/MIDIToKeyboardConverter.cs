@@ -1,14 +1,13 @@
-﻿using Melanchall.DryWetMidi.Common;
-using Melanchall.DryWetMidi.Core;
-using Melanchall.DryWetMidi.Interaction;
-using Melanchall.DryWetMidi.Multimedia;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows.Controls;
 using WindowsInput;
 using WindowsInput.Native;
+using Melanchall.DryWetMidi.Core;
+using Melanchall.DryWetMidi.Common;
+using Melanchall.DryWetMidi.Multimedia;
+using Melanchall.DryWetMidi.Interaction;
 
 namespace GenshinLyrePlayer
 {
