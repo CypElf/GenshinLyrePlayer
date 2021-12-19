@@ -22,7 +22,7 @@
         </Menu>
         <Grid>
             <ListBox x:Name="MidiFilesList" Margin="30,77,0,0" HorizontalAlignment="Left" Width="202" Height="281" VerticalAlignment="Top"/>
-            <TextBlock HorizontalAlignment="Left" Margin="45,30,0,0" Text="Select a MIDI file" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18" Grid.ColumnSpan="2"/>
+            <TextBlock HorizontalAlignment="Left" Margin="63,30,0,0" Text="Select a MIDI file" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
             <TextBlock x:Name="playingTextBlock" HorizontalAlignment="Left" Margin="268,172,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="26" Text="IDLE" RenderTransformOrigin="-4.492,0.557" Width="480" TextAlignment="Center"/>
             <TextBlock x:Name="infoTextBlock" Visibility="Hidden" HorizontalAlignment="Left" Margin="250,158,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" RenderTransformOrigin="-4.492,0.557" Width="513" TextAlignment="Center" Foreground="#FF3E3E3E"/>
             <ProgressBar x:Name="progressBar" Visibility="Hidden" HorizontalAlignment="Left" Height="8" Margin="289,276,0,0" VerticalAlignment="Top" Width="439"/>

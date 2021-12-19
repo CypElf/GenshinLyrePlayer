@@ -172,12 +172,12 @@ namespace GenshinLyrePlayer
 
         private void loadSave()
         {
+            cfg = new Config();
             try
             {
                 cfg = JsonSerializer.Deserialize<Config>(File.ReadAllText("config.json"));
 
                 // check if the stored enum fields are valid by trying to convert them to their enum variant
-
                 try
                 {
                     Enum.Parse(typeof(KeyboardLayout), cfg.keyboardLayout);
