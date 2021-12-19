@@ -27,6 +27,10 @@ Please be aware of this, keep it in mind and use this program at your own risks.
 
 <div align="center"><img src="./res/playing.png"></div>
 
+A video tutorial is also available on YouTube :
+
+[![](http://img.youtube.com/vi/XqygvZoXk0I/0.jpg)](https://youtu.be/XqygvZoXk0I)
+
 ## Caveats
 
 Because the musical instruments gadgets in Genshin Impact only have 3 [octaves](https://en.wikipedia.org/wiki/Octave), it's impossible to play all the notes of a MIDI file using notes on more than 3 octaves. This results in notes **not being played**.<br>
