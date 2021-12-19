@@ -29,7 +29,10 @@ Please be aware of this, keep it in mind and use this program at your own risks.
 
 A video tutorial is also available on YouTube :
 
+<div align="center">
+
 [![](http://img.youtube.com/vi/XqygvZoXk0I/0.jpg)](https://youtu.be/XqygvZoXk0I)
+</div>
 
 ## Caveats
 
