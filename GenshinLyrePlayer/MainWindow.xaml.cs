@@ -10,6 +10,7 @@ using Melanchall.DryWetMidi.Multimedia;
 using System;
 using System.Text.Json;
 using Melanchall.DryWetMidi.Interaction;
+using System.Threading.Tasks;
 
 namespace GenshinLyrePlayer
 {
@@ -52,9 +53,11 @@ namespace GenshinLyrePlayer
 
             foreach (var midiFile in midiFiles)
             {
-                var listItem = new ListBoxItem();
-                listItem.Content = string.Join(".", midiFile.Name.Split("\\").Last().Split(".").SkipLast(1));
-                listItem.FontSize = 14;
+                var listItem = new ListBoxItem
+                {
+                    Content = string.Join(".", midiFile.Name.Split("\\").Last().Split(".").SkipLast(1)),
+                    FontSize = 14
+                };
                 MidiFilesList.Items.Add(listItem);
             }
 
@@ -69,28 +72,38 @@ namespace GenshinLyrePlayer
         {
             if (!disableInputs)
             {
-                if (e.KeyPressed == (Key)Enum.Parse(typeof(Key), (string)cfg.stopKey) && playback != null && playback.IsRunning)
+                if (e.KeyPressed == (Key)Enum.Parse(typeof(Key), cfg.stopKey) && playback != null && playback.IsRunning)
                 {
                     playback.Stop();
                     setIdle();
                 }
 
-                if (e.KeyPressed == (Key)Enum.Parse(typeof(Key), (string)cfg.startKey) && MidiFilesList.Items.Count > 0 && (playback == null || !playback.IsRunning))
+                if (e.KeyPressed == (Key)Enum.Parse(typeof(Key), cfg.startKey) && MidiFilesList.Items.Count > 0 && (playback == null || !playback.IsRunning))
                 {
                     {
+                        Debug.WriteLine(MidiFilesList.SelectedIndex);
                         MidiFile midiFile;
-                        try
+                        if (MidiFilesList.SelectedIndex >= 0)
                         {
-                            midiFile = MidiFile.Read(midiFiles[MidiFilesList.SelectedIndex]);
+                            try
+                            {
+                                midiFile = MidiFile.Read(midiFiles[MidiFilesList.SelectedIndex]);
+                            }
+                            catch
+                            {
+                                MessageBox.Show("The file you're trying to play is not a valid MIDI file or is corrupted.", "Invalid file", MessageBoxButton.OK, MessageBoxImage.Error);
+                                return;
+                            }
                         }
-                        catch
+                        else
                         {
-                            MessageBox.Show("Unable to parse this file as a MIDI file");
+                            MessageBox.Show("Please select the MIDI file you want to play first.", "No file selected", MessageBoxButton.OK, MessageBoxImage.Error);
                             return;
                         }
 
                         var layout = (KeyboardLayout)Enum.Parse(typeof(KeyboardLayout), cfg.keyboardLayout);
 
+                        playingTextBlock.Margin = new Thickness(267, 108, 0, 0);
                         playingTextBlock.Text = "Playing " + ((ListBoxItem)MidiFilesList.SelectedItem).Content;
                         progressBar.Visibility = Visibility.Visible;
                         progressBar.Value = 0;
@@ -98,11 +111,30 @@ namespace GenshinLyrePlayer
 
                         var player = new MIDIToKeyboardConverter(midiFile, layout, cfg.useAutoRoot ? null : cfg.customRoot, progressBar);
 
-                        var hits = player.hitsForRootNote(player.rootNoteNumber);
-                        var notesCount = midiFile.GetNotes().Count;
+                        var hits = player.HitsForRootNote();
 
-                        infoTextBlock.Text = $"using root note {player.rootNoteNumber} with a restitution of {hits}/{notesCount} notes ({Math.Round((double)hits / notesCount * 100, 2)}%)";
+                        var totalNotesCount = midiFile.GetNotes().Count;
+                        var intervalNotesCount = player.NotesCountInIntervalOfRoot();
+
+                        var metricDuration = (MetricTimeSpan)midiFile.GetDuration(TimeSpanType.Metric);
+
+                        infoTextBlock.Text = $"using root note {player.rootNoteNumber}\nrestitution of {hits}/{totalNotesCount} of all notes ({Math.Round((double)hits / totalNotesCount * 100, 2)}%)\n{hits}/{intervalNotesCount} notes in the interval can be played ({Math.Round((double)hits / intervalNotesCount * 100, 2)}%)";
+
                         infoTextBlock.Visibility = Visibility.Visible;
+                        progressInfoTextBlock.Visibility = Visibility.Visible;
+
+                        var task = Task.Run(async () =>
+                        {
+                            Dispatcher.Invoke(() => progressInfoTextBlock.Text = $"0:00/{metricDuration.Minutes}:{metricDuration.Seconds:00}");
+                            var elapsedTime = 0;
+                            var songDuration = metricDuration.Hours * 3600 + metricDuration.Minutes * 60 + metricDuration.Seconds;
+                            while (elapsedTime < songDuration && progressInfoTextBlock.Visibility == Visibility.Visible)
+                            {
+                                await Task.Delay(1000);
+                                elapsedTime++;
+                                Dispatcher.Invoke(() => progressInfoTextBlock.Text = $"{elapsedTime / 60}:{elapsedTime % 60:00}/{metricDuration.Minutes}:{metricDuration.Seconds:00}");
+                            }
+                        });
 
                         playback = midiFile.GetPlayback(player);
                         playback.Start();
@@ -131,9 +163,11 @@ namespace GenshinLyrePlayer
 
         private void setIdle()
         {
+            playingTextBlock.Margin = new Thickness(268, 172, 0, 0);
             playingTextBlock.Text = "IDLE";
             progressBar.Visibility = Visibility.Hidden;
             infoTextBlock.Visibility = Visibility.Hidden;
+            progressInfoTextBlock.Visibility = Visibility.Hidden;
         }
 
         private void loadSave()

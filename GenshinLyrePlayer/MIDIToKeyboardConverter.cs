@@ -191,12 +191,31 @@ namespace GenshinLyrePlayer
             }
         }
 
-        public int hitsForRootNote(SevenBitNumber root)
+        public int HitsForRootNote()
         {
             int hits = 0;
             foreach (var note in midiFile.GetNotes())
             {
-                if (converter.ContainsKey(note.NoteNumber - root))
+                if (converter.ContainsKey(note.NoteNumber - rootNoteNumber))
+                {
+                    hits++;
+                }
+            }
+            return hits;
+        }
+
+        public int NotesCountInIntervalOfRoot()
+        {
+            int hits = 0;
+
+            var notes = converter.Keys.ToList();
+            notes.Sort();
+            var minNote = notes.First();
+            var maxNote = notes.Last();
+
+            foreach (var note in midiFile.GetNotes())
+            {
+                if (minNote <= note.NoteNumber - rootNoteNumber && maxNote >= note.NoteNumber - rootNoteNumber)
                 {
                     hits++;
                 }
