@@ -103,7 +103,7 @@ namespace GenshinLyrePlayer
 
                         var layout = (KeyboardLayout)Enum.Parse(typeof(KeyboardLayout), cfg.keyboardLayout);
 
-                        playingTextBlock.Margin = new Thickness(267, 108, 0, 0);
+                        playingTextBlock.Margin = new Thickness(265, 80, 0, 0);
                         playingTextBlock.Text = "Playing " + ((ListBoxItem)MidiFilesList.SelectedItem).Content;
                         progressBar.Visibility = Visibility.Visible;
                         progressBar.Value = 0;
@@ -118,7 +118,7 @@ namespace GenshinLyrePlayer
 
                         var metricDuration = (MetricTimeSpan)midiFile.GetDuration(TimeSpanType.Metric);
 
-                        infoTextBlock.Text = $"using root note {player.rootNoteNumber}\nrestitution of {hits}/{totalNotesCount} of all notes ({Math.Round((double)hits / totalNotesCount * 100, 2)}%)\n{hits}/{intervalNotesCount} notes in the interval can be played ({Math.Round((double)hits / intervalNotesCount * 100, 2)}%)";
+                        infoTextBlock.Text = $"using root note {player.rootNoteNumber}\n{hits}/{totalNotesCount} of all notes kept ({Math.Round((double)hits / totalNotesCount * 100, 2)}%)\n{hits}/{intervalNotesCount} notes in the used interval kept ({Math.Round((double)hits / intervalNotesCount * 100, 2)}%)";
 
                         infoTextBlock.Visibility = Visibility.Visible;
                         progressInfoTextBlock.Visibility = Visibility.Visible;
