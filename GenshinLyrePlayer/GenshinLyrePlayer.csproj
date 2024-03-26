@@ -1,34 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>images/icon.ico</ApplicationIcon>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Remove="res\**" />
     <EmbeddedResource Remove="res\**" />
     <None Remove="res\**" />
     <Page Remove="res\**" />
   </ItemGroup>
-
   <ItemGroup>
     <None Remove="images\help.png" />
     <None Remove="images\settings.png" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="InputSimulatorPlus" Version="1.0.7" />
-    <PackageReference Include="Melanchall.DryWetMidi" Version="6.0.0" />
+    <PackageReference Include="Melanchall.DryWetMidi" Version="7.0.2" />
+    <PackageReference Include="WindowsInput" Version="6.4.1" />
   </ItemGroup>
-
   <ItemGroup>
     <Resource Include="images\help.png" />
     <Resource Include="images\settings.png" />
   </ItemGroup>
-
 </Project>

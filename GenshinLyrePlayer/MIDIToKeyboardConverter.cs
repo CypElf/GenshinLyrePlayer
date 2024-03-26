@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
-using WindowsInput;
-using WindowsInput.Native;
+using WindowsInput.Events;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Common;
 using Melanchall.DryWetMidi.Multimedia;
@@ -17,8 +16,7 @@ namespace GenshinLyrePlayer
 
         private readonly MidiFile midiFile;
         public readonly SevenBitNumber rootNoteNumber;
-        private static readonly IKeyboardSimulator keyboard = new InputSimulator().Keyboard;
-        private readonly Dictionary<int, VirtualKeyCode> converter;
+        private readonly Dictionary<int, KeyCode> converter;
 
         // MIDI notes are coded with 7 bits, so they range from 0 to 127
         // As there are 12 semitones in one octave, there are a total of 11 octaves (with the latest one missing the 4 upper values)
@@ -59,101 +57,101 @@ namespace GenshinLyrePlayer
             35
         };
 
-        private static readonly List<VirtualKeyCode> azertyLyreKeys = new()
+        private static readonly List<KeyCode> azertyLyreKeys = new()
         {
             // F-clef
-            VirtualKeyCode.VK_W,
-            VirtualKeyCode.VK_X,
-            VirtualKeyCode.VK_C,
-            VirtualKeyCode.VK_V,
-            VirtualKeyCode.VK_B,
-            VirtualKeyCode.VK_N,
-            VirtualKeyCode.OEM_COMMA,
+            KeyCode.W,
+            KeyCode.X,
+            KeyCode.C,
+            KeyCode.V,
+            KeyCode.B,
+            KeyCode.N,
+            KeyCode.Oemcomma,
 
             // C-clef
-            VirtualKeyCode.VK_Q,
-            VirtualKeyCode.VK_S,
-            VirtualKeyCode.VK_D,
-            VirtualKeyCode.VK_F,
-            VirtualKeyCode.VK_G,
-            VirtualKeyCode.VK_H,
-            VirtualKeyCode.VK_J,
+            KeyCode.Q,
+            KeyCode.S,
+            KeyCode.D,
+            KeyCode.F,
+            KeyCode.G,
+            KeyCode.H,
+            KeyCode.J,
 
             // G-clef
-            VirtualKeyCode.VK_A,
-            VirtualKeyCode.VK_Z,
-            VirtualKeyCode.VK_E,
-            VirtualKeyCode.VK_R,
-            VirtualKeyCode.VK_T,
-            VirtualKeyCode.VK_Y,
-            VirtualKeyCode.VK_U
+            KeyCode.A,
+            KeyCode.Z,
+            KeyCode.E,
+            KeyCode.R,
+            KeyCode.T,
+            KeyCode.Y,
+            KeyCode.U
         };
 
-        private static readonly List<VirtualKeyCode> qwertzLyreKeys = new()
+        private static readonly List<KeyCode> qwertzLyreKeys = new()
         {
             // F-clef
-            VirtualKeyCode.VK_Y,
-            VirtualKeyCode.VK_X,
-            VirtualKeyCode.VK_C,
-            VirtualKeyCode.VK_V,
-            VirtualKeyCode.VK_B,
-            VirtualKeyCode.VK_N,
-            VirtualKeyCode.VK_M,
+            KeyCode.Y,
+            KeyCode.X,
+            KeyCode.C,
+            KeyCode.V,
+            KeyCode.B,
+            KeyCode.N,
+            KeyCode.M,
 
             // C-clef
-            VirtualKeyCode.VK_A,
-            VirtualKeyCode.VK_S,
-            VirtualKeyCode.VK_D,
-            VirtualKeyCode.VK_F,
-            VirtualKeyCode.VK_G,
-            VirtualKeyCode.VK_H,
-            VirtualKeyCode.VK_J,
+            KeyCode.A,
+            KeyCode.S,
+            KeyCode.D,
+            KeyCode.F,
+            KeyCode.G,
+            KeyCode.H,
+            KeyCode.J,
 
             // G-clef
-            VirtualKeyCode.VK_Q,
-            VirtualKeyCode.VK_W,
-            VirtualKeyCode.VK_E,
-            VirtualKeyCode.VK_R,
-            VirtualKeyCode.VK_T,
-            VirtualKeyCode.VK_Z,
-            VirtualKeyCode.VK_U,
+            KeyCode.Q,
+            KeyCode.W,
+            KeyCode.E,
+            KeyCode.R,
+            KeyCode.T,
+            KeyCode.Z,
+            KeyCode.U,
         };
 
-        private static readonly List<VirtualKeyCode> qwertyLyreKeys = new()
+        private static readonly List<KeyCode> qwertyLyreKeys = new()
         {
             // F-clef
-            VirtualKeyCode.VK_Z,
-            VirtualKeyCode.VK_X,
-            VirtualKeyCode.VK_C,
-            VirtualKeyCode.VK_V,
-            VirtualKeyCode.VK_B,
-            VirtualKeyCode.VK_N,
-            VirtualKeyCode.VK_M,
+            KeyCode.Z,
+            KeyCode.X,
+            KeyCode.C,
+            KeyCode.V,
+            KeyCode.B,
+            KeyCode.N,
+            KeyCode.M,
             
             // C-clef
-            VirtualKeyCode.VK_A,
-            VirtualKeyCode.VK_S,
-            VirtualKeyCode.VK_D,
-            VirtualKeyCode.VK_F,
-            VirtualKeyCode.VK_G,
-            VirtualKeyCode.VK_H,
-            VirtualKeyCode.VK_J,
+            KeyCode.A,
+            KeyCode.S,
+            KeyCode.D,
+            KeyCode.F,
+            KeyCode.G,
+            KeyCode.H,
+            KeyCode.J,
             
             // G-clef
-            VirtualKeyCode.VK_Q,
-            VirtualKeyCode.VK_W,
-            VirtualKeyCode.VK_E,
-            VirtualKeyCode.VK_R,
-            VirtualKeyCode.VK_T,
-            VirtualKeyCode.VK_Y,
-            VirtualKeyCode.VK_U,
+            KeyCode.Q,
+            KeyCode.W,
+            KeyCode.E,
+            KeyCode.R,
+            KeyCode.T,
+            KeyCode.Y,
+            KeyCode.U,
         };
 
         public MIDIToKeyboardConverter(MidiFile midiFile, KeyboardLayout layout, int? rootNote, ProgressBar progressBar)
         {
             this.midiFile = midiFile;
             this.progressBar = progressBar;
-            List<VirtualKeyCode> lyreKeys;
+            List<KeyCode> lyreKeys;
 
             if (layout == KeyboardLayout.QWERTY)
             {
@@ -175,7 +173,7 @@ namespace GenshinLyrePlayer
 
         public void PrepareForEventsSending() {}
 
-        public void SendEvent(MidiEvent midiEvent)
+        public async void SendEvent(MidiEvent midiEvent)
         {
             if (midiEvent is NoteOnEvent @event)
             {
@@ -184,8 +182,8 @@ namespace GenshinLyrePlayer
 
                 if (converter.ContainsKey(note.NoteNumber - rootNoteNumber))
                 {
-                    VirtualKeyCode key = converter[note.NoteNumber - rootNoteNumber];
-                    keyboard.KeyPress(key);
+                    KeyCode key = converter[note.NoteNumber - rootNoteNumber];
+                    await WindowsInput.Simulate.Events().Click(key).Invoke();
                 }
             }
         }
@@ -255,6 +253,10 @@ namespace GenshinLyrePlayer
             }
 
             return bestRoot;
+        }
+
+        public void Dispose()
+        {
         }
     }
 }
